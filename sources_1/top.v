@@ -221,7 +221,7 @@ end
 
     always @(*) begin
         if (ex_mem_mem[1])
-            mem_read_data = DMEM[ex_mem_alu_out];
+            mem_read_data = DMEM[ex_mem_alu_out[7:0]];
         else
             mem_read_data = 32'd0;
     end
