@@ -41,6 +41,10 @@ module mips_pipeline_tb;
     // Let the program run
     initial begin
         #300;
+        $display("REG[1] = %d", uut.REG[1]);
+        $display("REG[2] = %d", uut.REG[2]);
+        $display("REG[3] = %d", uut.REG[3]);
+        $finish;
         $display("====================================================");
         $display(" Simulation finished at time %0t", $time);
         $display(" Inspect internal DUT signals in the waveform window.");
