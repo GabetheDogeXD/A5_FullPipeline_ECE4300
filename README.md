@@ -32,5 +32,5 @@ memory_tb.v - test bench testing memory stage
 
 instr.txt
 
-![Picture1](Full_PipieLine1)
+![Picture1](Full_PipieLine1) <br />
 ![Picture2](Full_PipieLine2.png)
