@@ -27,13 +27,14 @@ module mips_pipeline_tb;
         $dumpfile("mips_pipeline.vcd");
         $dumpvars(0, mips_pipeline_tb);
     end
+    // -------------------------
 
     // Console output
     initial begin
-        $display("====================================================");
+        $display("-------------------------");
         $display(" MIPS Pipeline Simulation Start");
-        $display(" Program from instr.txt should compute 12 into r1");
-        $display("====================================================");
+        $display(" instr.txt will compute 12 into r1");
+        $display("-------------------------");
         $display(" time\tclk\trst");
         $monitor("%0t\t%b\t%b", $time, clk, rst);
     end
@@ -45,10 +46,10 @@ module mips_pipeline_tb;
         $display("REG[2] = %d", uut.REG[2]);
         $display("REG[3] = %d", uut.REG[3]);
         $finish;
-        $display("====================================================");
+        $display("-------------------------");
         $display(" Simulation finished at time %0t", $time);
-        $display(" Inspect internal DUT signals in the waveform window.");
-        $display("====================================================");
+        $display(" Regs should go as folllowing: 1->12, 2->2, 3->3");
+        $display("-------------------------");
         $finish;
     end
 
