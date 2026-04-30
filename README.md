@@ -1,5 +1,7 @@
 # ECE 4300 Coding Assignment 5: The Full Pipeline
 
+mips_pipeline_tb.v - The base testbench that starts the clock, reset, and pulls the reg values at the end of the process to the terminal. <br /> <br />
+
 REG - The single white section near the top showcases that the instructions went through the full pipeline. <br />
 LATCHES - Our green waves contains the clock cycle, reset, and latch sections between pipline stages. <br /> <br />
 
