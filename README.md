@@ -40,4 +40,12 @@ mem_wb.v - output latch <br />
 
 
 ![Picture1](Full_PipeLine2.png) <br />
-![Picture2](Full_PipeLine1.png)
+![Picture2](Full_PipeLine1.png) <br />
+<br /> <br />
+
+# ECE 4300 Coding Assignment 5: The Full Pipeline
+
+The top.v file was modified to include 
+
+![Picture3](Optimization.png) <br />
+
