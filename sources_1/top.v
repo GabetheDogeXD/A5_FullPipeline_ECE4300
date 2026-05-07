@@ -144,6 +144,7 @@ end
     reg [31:0] id_ex_readdat1;
     reg [31:0] id_ex_readdat2;
     reg [31:0] id_ex_sign_ext;
+    reg [4:0]  id_ex_rs;
     reg [4:0]  id_ex_rt;
     reg [4:0]  id_ex_rd;
     reg [5:0]  id_ex_funct;
@@ -161,15 +162,82 @@ end
     reg  [31:0] ex_alu_result;
     reg         ex_zero;
     reg  [4:0]  ex_write_reg;
+    
+    reg [1:0] forward_a;
+    reg [1:0] forward_b; //forwarding addition
+
+    reg [31:0] ex_alu_input_a;
+    reg [31:0] ex_forwarded_b;
 
     assign ex_regdst = id_ex_exec[3];
     assign ex_aluop  = id_ex_exec[2:1];
     assign ex_alusrc = id_ex_exec[0];
 
-    always @(*) begin
-        ex_branch_addr = id_ex_npc + (id_ex_sign_ext << 2);
-        ex_alu_src_b   = ex_alusrc ? id_ex_sign_ext : id_ex_readdat2;
-        ex_write_reg   = ex_regdst ? id_ex_rd : id_ex_rt;
+    // =========================================================
+// Forwarding Unit
+// forward_a / forward_b encoding:
+// 00 = use ID/EX register value
+// 10 = forward from EX/MEM ALU result
+// 01 = forward from MEM/WB writeback data
+// =========================================================
+always @(*) begin
+    forward_a = 2'b00;
+    forward_b = 2'b00;
+
+    // EX/MEM hazard for source A
+    if (ex_mem_wb[1] &&
+        (ex_mem_write_reg != 5'd0) &&
+        (ex_mem_write_reg == id_ex_rs)) begin
+        forward_a = 2'b10;
+    end
+
+    // EX/MEM hazard for source B
+    if (ex_mem_wb[1] &&
+        (ex_mem_write_reg != 5'd0) &&
+        (ex_mem_write_reg == id_ex_rt)) begin
+        forward_b = 2'b10;
+    end
+
+    // MEM/WB hazard for source A
+    if (wb_regwrite &&
+        (wb_write_reg != 5'd0) &&
+        !(ex_mem_wb[1] &&
+          (ex_mem_write_reg != 5'd0) &&
+          (ex_mem_write_reg == id_ex_rs)) &&
+        (wb_write_reg == id_ex_rs)) begin
+        forward_a = 2'b01;
+    end
+
+    // MEM/WB hazard for source B
+    if (wb_regwrite &&
+        (wb_write_reg != 5'd0) &&
+        !(ex_mem_wb[1] &&
+          (ex_mem_write_reg != 5'd0) &&
+          (ex_mem_write_reg == id_ex_rt)) &&
+        (wb_write_reg == id_ex_rt)) begin
+        forward_b = 2'b01;
+    end
+end
+
+        always @(*) begin
+    ex_branch_addr = id_ex_npc + (id_ex_sign_ext << 2);
+
+    case (forward_a)
+        2'b00: ex_alu_input_a = id_ex_readdat1;
+        2'b10: ex_alu_input_a = ex_mem_alu_out;
+        2'b01: ex_alu_input_a = wb_write_data;
+        default: ex_alu_input_a = id_ex_readdat1;
+    endcase
+
+    case (forward_b)
+        2'b00: ex_forwarded_b = id_ex_readdat2;
+        2'b10: ex_forwarded_b = ex_mem_alu_out;
+        2'b01: ex_forwarded_b = wb_write_data;
+        default: ex_forwarded_b = id_ex_readdat2;
+    endcase
+
+    ex_alu_src_b = ex_alusrc ? id_ex_sign_ext : ex_forwarded_b;
+    ex_write_reg = ex_regdst ? id_ex_rd : id_ex_rt;
 
         case (ex_aluop)
             2'b00: ex_alu_control = 3'b010; // add
@@ -188,11 +256,11 @@ end
         endcase
 
         case (ex_alu_control)
-            3'b000: ex_alu_result = id_ex_readdat1 & ex_alu_src_b;
-            3'b001: ex_alu_result = id_ex_readdat1 | ex_alu_src_b;
-            3'b010: ex_alu_result = id_ex_readdat1 + ex_alu_src_b;
-            3'b110: ex_alu_result = id_ex_readdat1 - ex_alu_src_b;
-            3'b111: ex_alu_result = ($signed(id_ex_readdat1) < $signed(ex_alu_src_b)) ? 32'd1 : 32'd0;
+            3'b000: ex_alu_result = ex_alu_input_a & ex_alu_src_b;
+            3'b001: ex_alu_result = ex_alu_input_a | ex_alu_src_b;
+            3'b010: ex_alu_result = ex_alu_input_a + ex_alu_src_b;
+            3'b110: ex_alu_result = ex_alu_input_a - ex_alu_src_b;
+            3'b111: ex_alu_result = ($signed(ex_alu_input_a) < $signed(ex_alu_src_b)) ? 32'd1 : 32'd0;
             default: ex_alu_result = 32'd0;
         endcase
 
@@ -265,6 +333,7 @@ end
             id_ex_readdat1  <= 32'd0;
             id_ex_readdat2  <= 32'd0;
             id_ex_sign_ext  <= 32'd0;
+            id_ex_rs        <= 5'd0;
             id_ex_rt        <= 5'd0;
             id_ex_rd        <= 5'd0;
             id_ex_funct     <= 6'd0;
@@ -322,6 +391,7 @@ end
             id_ex_readdat1  <= reg_read_data1;
             id_ex_readdat2  <= reg_read_data2;
             id_ex_sign_ext  <= sign_ext_imm;
+            id_ex_rs        <= id_rs;
             id_ex_rt        <= id_rt;
             id_ex_rd        <= id_rd;
             id_ex_funct     <= id_funct;
