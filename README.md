@@ -46,7 +46,8 @@ mem_wb.v - output latch <br />
 # ECE 4300 Coding Assignment 6: Optimization
 
 The top.v file was modified to include a data forwarding module into the MIPS Pipeline. 
-This segment skips the writeback stage by pulling the data from the EX/MEM and MEM/WB latches and pushing them directly into the REG for direct outputs.
+This segment skips the writeback stage by pulling the data from the EX/MEM and MEM/WB latches and pushing them directly into the ALU for direct outputs.
+In the yellow portion below, the ALU is shown to push the calculations to the REG wires while the writeback stage is still in progress.
 As seen in the REG wires, the time it took to complete the MIPS Pipieline was decreased the time from 180ns to 120ns.
 
 ![Picture3](Optimization.png) <br />
